@@ -21,14 +21,6 @@ def profile(request):
     return render(request, 'app/profile.html')
 
 
-def address(request):
-    return render(request, 'app/address.html')
-
-
-def orders(request):
-    return render(request, 'app/orders.html')
-
-
 def change_password(request):
     return render(request, 'app/changepassword.html')
 
@@ -164,3 +156,28 @@ def remove_cart(request):
             'totalamount': amount + shipping_amount
             }
         return JsonResponse(data)
+
+
+def address(request):
+    add = Customer.objects.filter(user=request.user)
+    return render(request, 'app/address.html', {'add':add, 'active':'btn-primary'})
+
+
+def orders(request):
+    op = OrderPlaced.objects.filter(user=request.user)
+    return render(request, 'app/orders.html', {'order_placed':op})
+
+def checkout(request):
+    user = request.user
+    add = Customer.objects.filter(user=user)
+    cart_items = Cart.objects.filter(user=user)
+    amount=0.0
+    shipping_amount=70.0
+    totalamount= 0.0
+    cart_product = [p for p in Cart.objects.all() if p.user == request.user]
+    if cart_product:
+        for p in cart_product:
+            tempamount=(p.quantity * p.product.discounted_price)
+            amount+= tempamount
+        totalamount= amount+ shipping_amount
+    return render(request, 'app/checkout.html',{'add': add, 'totalamount':totalamount, 'cart_items':cart_items})

@@ -1,8 +1,14 @@
-from django.shortcuts import render, redirect
-from django.views import View
-from . models import *
-from django.db.models import Q
 from django.http import JsonResponse
+from django.shortcuts import redirect, render
+from django.views import View
+from .models import Customer, Product, Cart, OrderPlaced
+from .forms import CustomerRegistrationForm, CustomerProfileForm
+from django.contrib import messages
+from django.db.models import Q
+from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+from django.contrib.auth.models import User
 
 
 def product_detail(request):
@@ -212,7 +218,17 @@ def bottomwear(request, data=None):
         bottomwears = Product.objects.filter(category='BW').filter(discounted_price__gt=1000)
     return render(request, 'app/bottomwear.html',{'bottomwears':bottomwears})
 
+class CustomerRegistrationView(View):
+    def get(self, request):
+        form = CustomerRegistrationForm()
+        return render(request, 'app/customerregistration.html', {'form': form})
 
+    def post(self, request):
+        form = CustomerRegistrationForm(request.POST)
+        if form.is_valid():
+            messages.success(request, 'Congratulation!! Registered Successfully')
+            form.save()
+        return render(request, 'app/customerregistration.html', {'form': form})
 
 def checkout(request):
     user = request.user
@@ -228,3 +244,5 @@ def checkout(request):
             amount+= tempamount
         totalamount= amount+ shipping_amount
     return render(request, 'app/checkout.html',{'add': add, 'totalamount':totalamount, 'cart_items':cart_items})
+
+
